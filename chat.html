@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat n8n · Webhook</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f0f4f8;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .chat-card {
+            max-width: 960px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 1.5rem;
+            padding: 1.25rem 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+            max-height: 900px;
+            position: relative;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .chat-header-left .avatar {
+            width: 36px;
+            height: 36px;
+            background: #1a1a2e;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-header-left .title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.3px;
+        }
+
+        .chat-header-left .subtitle {
+            font-size: 0.7rem;
+            color: #6b7280;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-header-right .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #f3f4f6;
+            padding: 0.2rem 0.7rem 0.2rem 0.6rem;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .chat-header-right .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.5; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .chat-header-right .btn-icon {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 30px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .chat-header-right .btn-icon:hover {
+            background: #e5e7eb;
+        }
+
+        .expand-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 30px;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .expand-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .expand-btn .expand-icon {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .expand-btn .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .hero-section {
+            margin-bottom: 0.8rem;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            max-height: 200px;
+            opacity: 1;
+        }
+
+        .hero-section.collapsed {
+            max-height: 0;
+            margin-bottom: 0;
+            opacity: 0;
+        }
+
+        .hero-section .greeting {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 0.1rem;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-section .description {
+            font-size: 0.82rem;
+            color: #6b7280;
+            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .messages-container {
+            background: #fafbfc;
+            border-radius: 1rem;
+            padding: 1rem 1rem;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            margin-bottom: 0.8rem;
+            border: 1px solid #f0f2f5;
+            scroll-behavior: smooth;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .messages-container.focused {
+            margin-bottom: 0.3rem;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+
+        .message-wrapper {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.7rem;
+            animation: messageIn 0.2s ease-out;
+            position: relative;
+        }
+
+        .message-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
+        @keyframes messageIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-wrapper.user {
+            align-items: flex-end;
+        }
+
+        .message-wrapper.bot {
+            align-items: flex-start;
+        }
+
+        .message-wrapper .message-content {
+            position: relative;
+            max-width: 92%;
+        }
+
+        .message-wrapper .bubble {
+            padding: 0.7rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            word-break: break-word;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .message-wrapper.user .bubble {
+            background: #1a1a2e;
+            color: white;
+            border-bottom-right-radius: 0.2rem;
+        }
+
+        .message-wrapper.bot .bubble {
+            background: #ffffff;
+            color: #1a1a2e;
+            border-bottom-left-radius: 0.2rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-wrapper .timestamp {
+            font-size: 0.55rem;
+            opacity: 0.4;
+            margin-top: 0.1rem;
+            padding: 0 0.3rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .message-wrapper.user .timestamp { color: #1a1a2e; }
+        .message-wrapper.bot .timestamp { color: #4b5563; }
+
+        /* Botões de ação - Copiar e Compartilhar */
+        .action-buttons {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: flex;
+            gap: 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .message-wrapper.bot:hover .action-buttons {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 0.1rem 0.35rem;
+            font-size: 0.55rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .action-btn:hover {
+            background: #e5e7eb;
+            color: #1a1a2e;
+        }
+
+        .action-btn.copied {
+            background: #d1fae5;
+            border-color: #34d399;
+            color: #065f46;
+        }
+
+        .action-btn .btn-icon {
+            font-size: 0.6rem;
+        }
+
+        /* Bot message content */
+        .bot .bubble p {
+            margin: 0.4rem 0;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+        }
+        .bot .bubble p:first-child { margin-top: 0; }
+        .bot .bubble p:last-child { margin-bottom: 0; }
+
+        .bot .bubble h1, .bot .bubble h2, .bot .bubble h3, .bot .bubble h4 {
+            margin: 0.6rem 0 0.3rem 0;
+            font-weight: 600;
+            line-height: 1.3;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.3px;
+        }
+        .bot .bubble h1 { font-size: 1.3rem; color: #1a1a2e; }
+        .bot .bubble h2 { font-size: 1.15rem; color: #1a1a2e; }
+        .bot .bubble h3 { font-size: 1rem; color: #1a1a2e; }
+        .bot .bubble h4 { font-size: 0.92rem; color: #1a1a2e; }
+
+        .bot .bubble ul, .bot .bubble ol {
+            margin: 0.25rem 0;
+            padding-left: 1.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .bot .bubble li { 
+            margin: 0.15rem 0;
+            line-height: 1.6;
+        }
+
+        .bot .bubble strong { 
+            font-weight: 600; 
+            color: #1a1a2e;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble em { 
+            font-style: italic; 
+            color: #4b5563;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble blockquote {
+            border-left: 4px solid #6366f1;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            color: #4b5563;
+            font-style: italic;
+            background: #f8fafc;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Playfair Display', 'Inter', serif;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .bot .bubble pre {
+            background: #1a1a2e;
+            color: #e5e7eb;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.78rem;
+            margin: 0.5rem 0;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .bot .bubble pre .code-lang {
+            position: absolute;
+            top: 0.3rem;
+            right: 0.6rem;
+            font-size: 0.6rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble code {
+            background: #f3f4f6;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            color: #1a1a2e;
+        }
+
+        .bot .bubble pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.78rem;
+            color: #e5e7eb;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        .bot .bubble .highlight-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            margin: 0.5rem 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble .highlight-box .label {
+            font-weight: 600;
+            color: #1a1a2e;
+            display: block;
+            margin-bottom: 0.2rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.5rem 0;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble table thead {
+            background: #f3f4f6;
+            color: #1a1a2e;
+        }
+
+        .bot .bubble table th {
+            padding: 0.4rem 0.7rem;
+            text-align: left;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble table td {
+            padding: 0.35rem 0.7rem;
+            border-bottom: 1px solid #f0f2f5;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble table tbody tr:last-child td { border-bottom: none; }
+        .bot .bubble table tbody tr:hover { background: #fafbfc; }
+        .bot .bubble .table-wrapper { overflow-x: auto; margin: 0.2rem 0; }
+
+        .bot .bubble .hotel-card {
+            background: #fafbfc;
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            margin: 0.6rem 0;
+            border-left: 4px solid #1a1a2e;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble .hotel-card:hover {
+            background: #f3f4f6;
+            transform: translateX(3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+        }
+
+        .bot .bubble .hotel-card .hotel-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #1a1a2e;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble .hotel-card .hotel-name .hotel-icon {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+
+        .bot .bubble .hotel-card .hotel-detail {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin: 0.2rem 0;
+            font-size: 0.85rem;
+            color: #4b5563;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble .hotel-card .hotel-detail .icon {
+            min-width: 18px;
+            color: #6b7280;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .bot .bubble .hotel-card .hotel-detail .content {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .bot .bubble .hotel-card .hotel-detail .content strong {
+            color: #1a1a2e;
+        }
+
+        .bot .bubble .hotel-card .sponsored-badge {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.08rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 0.2rem;
+            border: 1px solid #e5e7eb;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble .hotel-card .price-tag {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.08rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            border: 1px solid #e5e7eb;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bot .bubble hr {
+            border: none;
+            border-top: 2px solid #f0f2f5;
+            margin: 0.8rem 0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            background: #ffffff;
+            padding: 0.15rem 0.15rem 0.15rem 1rem;
+            border-radius: 50px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .input-area:focus-within {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+        }
+
+        #chat-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 0.6rem 0.1rem;
+            font-size: 0.88rem;
+            background: transparent;
+            color: #1a1a2e;
+            min-width: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #chat-input::placeholder {
+            color: #9ca3af;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #send-btn {
+            background: #1a1a2e;
+            border: none;
+            color: white;
+            padding: 0.5rem 1.4rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+
+        #send-btn:hover {
+            background: #2d2d4e;
+            transform: scale(0.97);
+        }
+        #send-btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Quick Questions - Scrollbar elegante */
+        .quick-questions-wrapper {
+            position: relative;
+            overflow: hidden;
+            padding: 0.2rem 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 200px;
+            opacity: 1;
+        }
+
+        .quick-questions-slider {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 0.2rem 0.1rem;
+            scrollbar-width: thin;
+            -ms-overflow-style: none;
+        }
+
+        /* Scrollbar estilizada - clara e elegante */
+        .quick-questions-slider::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .quick-questions-slider::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 10px;
+            margin: 0 20px;
+        }
+
+        .quick-questions-slider::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .quick-questions-slider::-webkit-scrollbar-thumb:hover {
+            background: #b0b5bf;
+        }
+
+        /* Firefox scrollbar */
+        .quick-questions-slider {
+            scrollbar-color: #d1d5db #f3f4f6;
+            scrollbar-width: thin;
+        }
+
+        .quick-question-btn {
+            flex: 0 0 auto;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            padding: 0.25rem 0.9rem;
+            border-radius: 30px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .quick-question-btn:hover {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        .quick-question-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .sponsors-section {
+            margin-top: 0.8rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid #f0f2f5;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sponsors-section.compact {
+            margin-top: 0.3rem;
+            padding-top: 0.3rem;
+        }
+
+        .sponsors-title {
+            text-align: center;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #6b7280;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sponsors-title.compact {
+            font-size: 0.45rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .sponsors-carousel {
+            overflow: hidden;
+            position: relative;
+            padding: 0.15rem 0;
+        }
+
+        .sponsors-track {
+            display: flex;
+            gap: 2rem;
+            animation: scrollSponsors 25s linear infinite;
+            width: max-content;
+        }
+
+        .sponsors-track:hover {
+            animation-play-state: paused;
+        }
+
+        .sponsor-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: #4b5563;
+            white-space: nowrap;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            padding: 0.05rem 0.2rem;
+            text-decoration: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sponsor-item:hover {
+            opacity: 1;
+        }
+
+        .sponsor-item .logo-icon {
+            margin-right: 0.3rem;
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        @keyframes scrollSponsors {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .sponsor-item.sonos { color: #2c2c2c; }
+        .sponsor-item.spotify { color: #1DB954; }
+        .sponsor-item.openai { color: #10a37f; }
+        .sponsor-item.zapier { color: #FF4A00; }
+        .sponsor-item.patreon { color: #FF424D; }
+        .sponsor-item.auth0 { color: #EB5424; }
+        .sponsor-item.imdb { color: #F5C518; }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.15rem 0.4rem;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: #6366f1;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+            30% { transform: translateY(-4px); opacity: 0.9; }
+        }
+
+        .webhook-info {
+            margin-top: 0.5rem;
+            font-size: 0.55rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            color: #6b7280;
+            opacity: 0.4;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 50px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .webhook-info.hidden {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .webhook-info span {
+            background: #fafbfc;
+            padding: 0.1rem 0.6rem;
+            border-radius: 30px;
+            border: 1px solid #f0f2f5;
+        }
+
+        .error-badge {
+            color: #dc2626;
+            background: #fef2f2 !important;
+            border-color: #fecaca !important;
+        }
+
+        @media (max-width: 640px) {
+            .chat-card { padding: 0.8rem 1rem; height: 98vh; max-height: none; border-radius: 1rem; }
+            .hero-section .greeting { font-size: 1rem; }
+            .hero-section .description { font-size: 0.75rem; }
+            .quick-question-btn { font-size: 0.65rem; padding: 0.2rem 0.7rem; }
+            .sponsor-item { font-size: 0.7rem; }
+            .chat-header-left .title { font-size: 0.85rem; }
+            .chat-header-left .subtitle { font-size: 0.6rem; }
+            .bubble { font-size: 0.82rem; padding: 0.4rem 0.7rem; }
+            .bot .bubble .hotel-card { padding: 0.4rem 0.6rem; }
+            .bot .bubble .hotel-card .hotel-detail { font-size: 0.75rem; }
+            .action-btn { font-size: 0.5rem; padding: 0.08rem 0.25rem; }
+            .bot .bubble pre { font-size: 0.7rem; padding: 0.6rem 0.8rem; }
+            .quick-questions-slider::-webkit-scrollbar { height: 3px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-card" role="main">
+        <div class="chat-header">
+            <div class="chat-header-left">
+                <div class="avatar">🤖</div>
+                <div>
+                    <div class="title">n8n Assistant</div>
+                    <div class="subtitle">Webhook · Chat</div>
+                </div>
+            </div>
+            <div class="chat-header-right">
+                <span class="status-badge">
+                    <span class="status-dot"></span>
+                    Online
+                </span>
+                <button class="expand-btn" id="expand-btn" title="Expandir/Contrair">
+                    <span class="expand-icon" id="expand-icon">▼</span>
+                    <span id="expand-text">Expandir</span>
+                </button>
+                <button class="btn-icon" onclick="window.__debugChat?.clear()">✕</button>
+            </div>
+        </div>
+
+        <div class="hero-section" id="hero-section">
+            <div class="greeting">🏨 Como posso ajudar você a encontrar?</div>
+            <div class="description">Vamos encontrar o hotel perfeito para sua estadia. Busque acomodações, compare preços e encontre as melhores ofertas.</div>
+        </div>
+
+        <div id="message-container" class="messages-container">
+            <div class="message-wrapper bot">
+                <div class="message-content">
+                    <div class="bubble">👋 Olá! Envie uma mensagem para o n8n via webhook.</div>
+                </div>
+                <div class="timestamp">bot · agora</div>
+            </div>
+        </div>
+
+        <div class="input-wrapper" id="input-wrapper">
+            <div class="input-area">
+                <input type="text" id="chat-input" placeholder="Digite sua mensagem aqui..." autocomplete="off" />
+                <button id="send-btn">Enviar</button>
+            </div>
+
+            <div class="quick-questions-wrapper" id="questions-wrapper">
+                <div class="quick-questions-slider" id="questions-slider">
+                    <button class="quick-question-btn" data-question="⭐ Encontre hotéis 5 estrelas no Rio de Janeiro">⭐ 5 estrelas no Rio</button>
+                    <button class="quick-question-btn" data-question="🏖️ Melhores hotéis de frente para o mar no Brasil">🏖️ Frente para o mar</button>
+                    <button class="quick-question-btn" data-question="💰 Compare preços de hotéis em São Paulo">💰 Preços em SP</button>
+                    <button class="quick-question-btn" data-question="💆 Hotéis com piscina e spa">💆 Piscina e spa</button>
+                    <button class="quick-question-btn" data-question="💵 Hotéis baratos em Salvador">💵 Baratos em Salvador</button>
+                    <button class="quick-question-btn" data-question="❤️ Hotéis românticos para casais">❤️ Românticos</button>
+                    <button class="quick-question-btn" data-question="✈️ Hotéis próximos ao aeroporto">✈️ Próximos ao aeroporto</button>
+                    <button class="quick-question-btn" data-question="📊 Mostre um gráfico de preços de hotéis">📊 Gráfico de preços</button>
+                    <button class="quick-question-btn" data-question="🌴 Resorts all inclusive">🌴 All inclusive</button>
+                    <button class="quick-question-btn" data-question="🏙️ Hotéis no centro da cidade">🏙️ Centro da cidade</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sponsors-section" id="sponsors-section">
+            <div class="sponsors-title" id="sponsors-title">🚀 Powered by the best frontend teams</div>
+            <div class="sponsors-carousel">
+                <div class="sponsors-track" id="sponsors-track"></div>
+            </div>
+        </div>
+
+        <div class="webhook-info" id="webhook-info">
+            <span>🔗 integração n8n</span>
+            <span id="webhook-status">✅ webhook configurado</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            const WEBHOOK_BASE_URL = 'http://localhost:5678/webhook/chat';
+            
+            const messagesContainer = document.getElementById('message-container');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            const webhookStatusSpan = document.getElementById('webhook-status');
+            const slider = document.getElementById('questions-slider');
+            const sponsorsTrack = document.getElementById('sponsors-track');
+            const heroSection = document.getElementById('hero-section');
+            const sponsorsSection = document.getElementById('sponsors-section');
+            const sponsorsTitle = document.getElementById('sponsors-title');
+            const webhookInfo = document.getElementById('webhook-info');
+            const expandBtn = document.getElementById('expand-btn');
+            const expandIcon = document.getElementById('expand-icon');
+            const expandText = document.getElementById('expand-text');
+
+            const sponsors = [
+                { name: 'SONOS', icon: '🔊', class: 'sonos', url: 'https://www.sonos.com' },
+                { name: 'Spotify', icon: '🎵', class: 'spotify', url: 'https://www.spotify.com' },
+                { name: 'OpenAI', icon: '🤖', class: 'openai', url: 'https://www.openai.com' },
+                { name: 'zapier', icon: '⚡', class: 'zapier', url: 'https://www.zapier.com' },
+                { name: 'PATREON', icon: '❤️', class: 'patreon', url: 'https://www.patreon.com' },
+                { name: 'Auth0', icon: '🔐', class: 'auth0', url: 'https://www.auth0.com' },
+                { name: 'IMDb', icon: '🎬', class: 'imdb', url: 'https://www.imdb.com' }
+            ];
+
+            function renderSponsors() {
+                const allSponsors = [...sponsors, ...sponsors];
+                sponsorsTrack.innerHTML = allSponsors.map(sponsor => `
+                    <a href="${sponsor.url}" target="_blank" class="sponsor-item ${sponsor.class}" title="${sponsor.name}">
+                        <span class="logo-icon">${sponsor.icon}</span>
+                        ${sponsor.name}
+                    </a>
+                `).join('');
+            }
+
+            let isExpanded = true;
+
+            expandBtn.addEventListener('click', function() {
+                isExpanded = !isExpanded;
+                
+                if (isExpanded) {
+                    heroSection.classList.remove('collapsed');
+                    webhookInfo.classList.remove('hidden');
+                    sponsorsSection.classList.remove('compact');
+                    sponsorsTitle.classList.remove('compact');
+                    messagesContainer.classList.remove('focused');
+                    expandIcon.classList.remove('expanded');
+                    expandText.textContent = 'Expandir';
+                } else {
+                    heroSection.classList.add('collapsed');
+                    webhookInfo.classList.add('hidden');
+                    sponsorsSection.classList.add('compact');
+                    sponsorsTitle.classList.add('compact');
+                    messagesContainer.classList.add('focused');
+                    expandIcon.classList.add('expanded');
+                    expandText.textContent = 'Contrair';
+                }
+            });
+
+            let isWaitingResponse = false;
+            let messageHistory = [];
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Função para compartilhar no WhatsApp
+            function shareWhatsApp(text) {
+                // Remove tags HTML para obter texto puro
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = text;
+                const plainText = tempDiv.textContent || tempDiv.innerText || '';
+                
+                // Codifica a mensagem para URL
+                const encodedText = encodeURIComponent(plainText);
+                const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+                
+                // Abre em nova janela/aba
+                window.open(whatsappUrl, '_blank');
+            }
+
+            // Função para copiar texto
+            function copyMessage(text, btn) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = text;
+                const plainText = tempDiv.textContent || tempDiv.innerText || '';
+                
+                navigator.clipboard.writeText(plainText).then(() => {
+                    btn.textContent = '✓';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = '📋';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                }).catch(() => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = plainText;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    btn.textContent = '✓';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = '📋';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            }
+
+            function formatMarkdown(text) {
+                if (!text) return '';
+                let html = text;
+                
+                html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+                html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+                html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+                html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+                
+                html = html.replace(/```(\w+)?\s*([\s\S]*?)```/g, function(match, lang, code) {
+                    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : '';
+                    return `<pre>${langLabel}<code>${escapeHtml(code.trim())}</code></pre>`;
+                });
+                
+                html = html.replace(/`([^`]+)`/g, function(match, code) {
+                    return `<code>${escapeHtml(code)}</code>`;
+                });
+                
+                html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+                html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+                
+                html = html.replace(/^[-*+]\s+(.*$)/gim, '<li>$1</li>');
+                html = html.replace(/(<li>.*<\/li>\s*)+/g, function(match) {
+                    return `<ul>${match}</ul>`;
+                });
+                
+                html = html.replace(/^\d+\.\s+(.*$)/gim, '<li>$1</li>');
+                html = html.replace(/(<li>.*<\/li>\s*){2,}/g, function(match) {
+                    return `<ol>${match}</ol>`;
+                });
+                
+                html = html.replace(/^>\s+(.*$)/gim, '<blockquote>$1</blockquote>');
+                html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                html = html.replace(/\n/g, '<br>');
+                html = html.replace(/(<br>\s*){3,}/g, '<br><br>');
+                
+                return html;
+            }
+
+            function formatHotels(text) {
+                if (!text || text.trim() === '') return '';
+
+                let cleanText = text.replace(/^[-*•]\s*/gm, '');
+                cleanText = cleanText.replace(/\n{3,}/g, '\n\n');
+                
+                const hotelPatterns = [
+                    /(?:\(patrocinado\)\s*)?([A-Za-zÀ-ÿ\s&]+)\s*[–-]\s*R\$\s*([\d.,]+)/i,
+                    /(?:\(patrocinado\)\s*)?([A-Za-zÀ-ÿ\s&]+)\s*[–-]\s*([\d.,]+)\s*\/\s*noite/i,
+                    /(?:\(patrocinado\)\s*)?([A-Za-zÀ-ÿ\s&]+)\s*[–-]\s*R\$\s*([\d.,]+)\s*\/\s*noite/i,
+                ];
+
+                const lines = cleanText.split('\n').filter(l => l.trim() !== '');
+                
+                let hotelCount = 0;
+                let tempText = cleanText;
+                
+                hotelPatterns.forEach(pattern => {
+                    const matches = tempText.match(pattern);
+                    if (matches) hotelCount = Math.max(hotelCount, tempText.split(pattern).length - 1);
+                });
+
+                if (hotelCount < 2) {
+                    return formatMarkdown(cleanText);
+                }
+
+                let hotels = [];
+                let currentHotel = null;
+                let currentText = '';
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    
+                    let match = null;
+                    for (const pattern of hotelPatterns) {
+                        const testMatch = line.match(pattern);
+                        if (testMatch) {
+                            match = testMatch;
+                            break;
+                        }
+                    }
+
+                    if (match) {
+                        if (currentHotel) {
+                            if (currentText) {
+                                currentHotel.details.push({ type: 'description', text: currentText.trim() });
+                                currentText = '';
+                            }
+                            hotels.push(currentHotel);
+                        }
+
+                        const isSponsored = line.toLowerCase().includes('patrocinado') || match[0].toLowerCase().includes('patrocinado');
+                        currentHotel = {
+                            name: match[1] ? match[1].trim() : line.split('–')[0].trim(),
+                            price: match[2] ? `R$ ${match[2].trim()}` : '',
+                            details: [],
+                            sponsored: isSponsored
+                        };
+                    } else if (currentHotel) {
+                        if (line.includes('Descrição:') || line.includes('Descricao:')) {
+                            currentText += line.replace(/Descrição:?\s*/i, '') + ' ';
+                        } else if (line.includes('Distância') || line.includes('Distancia')) {
+                            currentText += line + ' ';
+                        } else if (!line.includes('Hotel') && !line.includes('–') && !line.includes('R$')) {
+                            currentText += line + ' ';
+                        }
+                    }
+                }
+
+                if (currentHotel) {
+                    if (currentText) {
+                        currentHotel.details.push({ type: 'description', text: currentText.trim() });
+                    }
+                    hotels.push(currentHotel);
+                }
+
+                if (hotels.length === 0) {
+                    return formatMarkdown(cleanText);
+                }
+
+                let html = '';
+                hotels.forEach(hotel => {
+                    html += buildHotelCard(hotel);
+                });
+
+                return html;
+            }
+
+            function buildHotelCard(hotel) {
+                if (!hotel) return '';
+
+                let html = '<div class="hotel-card">';
+                html += `<div class="hotel-name"><span class="hotel-icon">🏨</span> ${escapeHtml(hotel.name)}</div>`;
+                
+                if (hotel.price) {
+                    html += `<div class="hotel-detail">`;
+                    html += `<span class="icon">💰</span>`;
+                    html += `<span class="content"><span class="price-tag">${escapeHtml(hotel.price)}</span></span>`;
+                    html += `</div>`;
+                }
+                
+                if (hotel.details && hotel.details.length > 0) {
+                    hotel.details.forEach(detail => {
+                        let icon = '📍';
+                        let text = detail.text;
+                        
+                        if (text.toLowerCase().includes('distância') || text.toLowerCase().includes('distancia') || text.includes('km')) {
+                            icon = '📍';
+                        } else if (text.toLowerCase().includes('piscina') || text.toLowerCase().includes('spa') || text.toLowerCase().includes('vista') || text.toLowerCase().includes('luxo')) {
+                            icon = '🌟';
+                        } else {
+                            icon = '•';
+                        }
+                        
+                        html += `<div class="hotel-detail">`;
+                        html += `<span class="icon">${icon}</span>`;
+                        html += `<span class="content">${formatMarkdown(escapeHtml(text))}</span>`;
+                        html += `</div>`;
+                    });
+                }
+                
+                if (hotel.sponsored) {
+                    html += `<div><span class="sponsored-badge">⭐ PATROCINADO</span></div>`;
+                }
+                
+                html += '</div>';
+                return html;
+            }
+
+            function formatMarkdownWithTable(text) {
+                const lines = text.split('\n');
+                let result = [];
+                let inTable = false;
+                let tableRows = [];
+                let tableHeaders = [];
+                let isHeaderRow = true;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.includes('|') && !line.startsWith('>')) {
+                        const cells = line.split('|').map(c => c.trim()).filter(c => c !== '');
+                        if (line.includes('---')) continue;
+                        if (!inTable) {
+                            inTable = true;
+                            tableRows = [];
+                            tableHeaders = [];
+                            isHeaderRow = true;
+                        }
+                        if (isHeaderRow) {
+                            tableHeaders = cells;
+                            isHeaderRow = false;
+                        } else {
+                            tableRows.push(cells);
+                        }
+                    } else {
+                        if (inTable) {
+                            result.push(buildTableHTML(tableHeaders, tableRows));
+                            inTable = false;
+                            tableRows = [];
+                            tableHeaders = [];
+                            isHeaderRow = true;
+                        }
+                        if (line) result.push(formatMarkdown(line));
+                        else result.push('<br>');
+                    }
+                }
+                if (inTable && tableHeaders.length > 0) {
+                    result.push(buildTableHTML(tableHeaders, tableRows));
+                }
+                return result.join('\n');
+            }
+
+            function buildTableHTML(headers, rows) {
+                if (headers.length === 0) return '';
+                let html = '<div class="table-wrapper"><table><thead><tr>';
+                headers.forEach(header => {
+                    html += `<th>${escapeHtml(header)}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                rows.forEach(row => {
+                    html += '<tr>';
+                    for (let i = 0; i < headers.length; i++) {
+                        const cell = row[i] || '';
+                        html += `<td>${formatMarkdown(cell)}</td>`;
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+                return html;
+            }
+
+            function formatMessage(text) {
+                if (!text) return '';
+                
+                const hasHotelFormat = text.includes('R$') && (text.includes('–') || text.includes('-')) && 
+                                      (text.includes('Hotel') || text.includes('hotel'));
+                
+                if (text.includes('|') && text.includes('---')) {
+                    return formatMarkdownWithTable(text);
+                }
+                
+                if (hasHotelFormat || text.includes('(patrocinado)')) {
+                    const formatted = formatHotels(text);
+                    if (formatted && formatted.trim() !== '') {
+                        return formatted;
+                    }
+                }
+                
+                return formatMarkdown(text);
+            }
+
+            function addMessage(text, sender = 'user', timestamp = null) {
+                if (!text || text.trim() === '') return;
+                const now = timestamp || new Date();
+                const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${sender}`;
+                
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                if (sender === 'bot') {
+                    const formattedHtml = formatMessage(text);
+                    bubble.innerHTML = formattedHtml;
+                    
+                    // Container de botões de ação
+                    const actionButtons = document.createElement('div');
+                    actionButtons.className = 'action-buttons';
+                    
+                    // Botão Copiar
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'action-btn';
+                    copyBtn.innerHTML = '<span class="btn-icon">📋</span>';
+                    copyBtn.title = 'Copiar mensagem';
+                    copyBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        copyMessage(text, this);
+                    });
+                    actionButtons.appendChild(copyBtn);
+                    
+                    // Botão WhatsApp
+                    const whatsappBtn = document.createElement('button');
+                    whatsappBtn.className = 'action-btn';
+                    whatsappBtn.innerHTML = '<span class="btn-icon">💬</span>';
+                    whatsappBtn.title = 'Compartilhar no WhatsApp';
+                    whatsappBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        shareWhatsApp(text);
+                    });
+                    actionButtons.appendChild(whatsappBtn);
+                    
+                    content.appendChild(actionButtons);
+                } else {
+                    bubble.textContent = text;
+                }
+                
+                content.appendChild(bubble);
+                wrapper.appendChild(content);
+                
+                const timeEl = document.createElement('div');
+                timeEl.className = 'timestamp';
+                timeEl.textContent = `${sender === 'user' ? 'você' : 'bot'} · ${timeStr}`;
+                wrapper.appendChild(timeEl);
+                
+                messagesContainer.appendChild(wrapper);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                messageHistory.push({ sender, text, timestamp: now });
+            }
+
+            function showTyping() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message-wrapper bot';
+                typingDiv.id = 'typing-indicator';
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.background = '#fafbfc';
+                bubble.style.padding = '0.4rem 1rem';
+                const dots = document.createElement('div');
+                dots.className = 'typing-indicator';
+                dots.innerHTML = '<span></span><span></span><span></span>';
+                bubble.appendChild(dots);
+                content.appendChild(bubble);
+                typingDiv.appendChild(content);
+                const timeEl = document.createElement('div');
+                timeEl.className = 'timestamp';
+                timeEl.textContent = 'bot · digitando';
+                typingDiv.appendChild(timeEl);
+                messagesContainer.appendChild(typingDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            function hideTyping() {
+                const typingEl = document.getElementById('typing-indicator');
+                if (typingEl) typingEl.remove();
+            }
+
+            function encodeMessage(message) {
+                return encodeURIComponent(message);
+            }
+
+            function buildWebhookUrl(message) {
+                return `${WEBHOOK_BASE_URL}?msg=${encodeMessage(message)}`;
+            }
+
+            async function sendToWebhook(messageText) {
+                if (!messageText || messageText.trim() === '') return;
+                if (isWaitingResponse) return;
+
+                isWaitingResponse = true;
+                sendBtn.disabled = true;
+                chatInput.disabled = true;
+                chatInput.style.opacity = '0.6';
+                
+                document.querySelectorAll('.quick-question-btn').forEach(btn => btn.disabled = true);
+
+                addMessage(messageText, 'user');
+                chatInput.value = '';
+                chatInput.focus();
+
+                showTyping();
+                const webhookUrl = buildWebhookUrl(messageText);
+
+                try {
+                    const response = await fetch(webhookUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        mode: 'cors',
+                        credentials: 'omit',
+                    });
+
+                    hideTyping();
+
+                    if (!response.ok) {
+                        const errorText = await response.text().catch(() => 'Erro desconhecido');
+                        console.warn('n8n webhook respondeu com erro:', response.status, errorText);
+                        addMessage(`⚠️ Erro no webhook (${response.status}). Verifique se o n8n está rodando.`, 'bot');
+                        webhookStatusSpan.innerHTML = '❌ webhook falhou';
+                        webhookStatusSpan.className = 'error-badge';
+                        return;
+                    }
+
+                    let replyText = '';
+                    try {
+                        const data = await response.json();
+                        if (data && typeof data === 'object') {
+                            replyText = data.response || data.message || data.reply || data.text || data.output || data.answer || data.result || JSON.stringify(data);
+                        } else {
+                            replyText = String(data);
+                        }
+                    } catch (parseError) {
+                        replyText = await response.text();
+                    }
+
+                    if (!replyText || replyText.trim() === '') {
+                        replyText = '🤖 (resposta vazia do webhook)';
+                    }
+
+                    addMessage(replyText, 'bot');
+                    webhookStatusSpan.innerHTML = '✅ webhook OK';
+                    webhookStatusSpan.className = '';
+
+                } catch (error) {
+                    hideTyping();
+                    console.error('Erro ao chamar webhook:', error);
+                    let errorMsg = '⚠️ Falha na comunicação com o n8n. ';
+                    if (error.message === 'Failed to fetch') {
+                        errorMsg += 'Verifique se: 1) O n8n está rodando em http://localhost:5678, 2) O webhook está ativo, 3) Você está usando um servidor local (não file://)';
+                    } else {
+                        errorMsg += error.message || 'erro de rede';
+                    }
+                    addMessage(errorMsg, 'bot');
+                    webhookStatusSpan.innerHTML = '⚠️ erro de conexão';
+                    webhookStatusSpan.className = 'error-badge';
+                } finally {
+                    isWaitingResponse = false;
+                    sendBtn.disabled = false;
+                    chatInput.disabled = false;
+                    chatInput.style.opacity = '1';
+                    chatInput.focus();
+                    document.querySelectorAll('.quick-question-btn').forEach(btn => btn.disabled = false);
+                }
+            }
+
+            slider.addEventListener('click', function(e) {
+                const btn = e.target.closest('.quick-question-btn');
+                if (!btn || btn.disabled || isWaitingResponse) return;
+                const question = btn.dataset.question;
+                if (question) {
+                    chatInput.value = question;
+                    sendToWebhook(question);
+                }
+            });
+
+            sendBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const message = chatInput.value.trim();
+                if (message && !isWaitingResponse) sendToWebhook(message);
+            });
+
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendBtn.click();
+                }
+            });
+
+            window.addEventListener('load', function() {
+                renderSponsors();
+                setTimeout(() => {
+                    chatInput.focus();
+                    chatInput.blur();
+                }, 100);
+                
+                if (window.location.protocol === 'file:') {
+                    webhookStatusSpan.innerHTML = '⚠️ Use um servidor local (http://) para evitar CORS';
+                    webhookStatusSpan.className = 'error-badge';
+                    setTimeout(() => {
+                        addMessage('ℹ️ Para funcionar, abra este arquivo via servidor local (ex: http://localhost:8000). O modo file:// bloqueia requisições.', 'bot');
+                    }, 1000);
+                } else {
+                    webhookStatusSpan.innerHTML = '✅ webhook configurado (localhost)';
+                }
+            });
+
+            window.__debugChat = {
+                sendMessage: sendToWebhook,
+                addMessage,
+                clear: () => {
+                    messagesContainer.innerHTML = '';
+                    messageHistory = [];
+                    const welcomeMsg = document.createElement('div');
+                    welcomeMsg.className = 'message-wrapper bot';
+                    welcomeMsg.innerHTML = `<div class="message-content"><div class="bubble">👋 Olá! Envie uma mensagem para o n8n via webhook.</div></div><div class="timestamp">bot · agora</div>`;
+                    messagesContainer.appendChild(welcomeMsg);
+                },
+                webhookUrl: WEBHOOK_BASE_URL,
+                buildUrl: buildWebhookUrl,
+                formatMessage: formatMessage
+            };
+
+            console.log('💬 Chat n8n pronto!');
+            console.log(`📡 Webhook URL: ${WEBHOOK_BASE_URL}?msg=...`);
+        })();
+    </script>
+</body>
+</html>
