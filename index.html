@@ -1469,7 +1469,7 @@
                     console.error('Erro ao chamar webhook:', error);
                     let errorMsg = '⚠️ Falha na comunicação com o n8n. ';
                     if (error.message === 'Failed to fetch') {
-                        errorMsg += 'Verifique se: 1) O n8n está rodando em http://localhost:5678, 2) O webhook está ativo, 3) Você está usando um servidor local (não file://)';
+                        errorMsg += 'Verifique se: 1) O n8n está rodando em http://darwin-n8n.localhost, 2) O webhook está ativo, 3) Você está usando um servidor local (não file://)';
                     } else {
                         errorMsg += error.message || 'erro de rede';
                     }
